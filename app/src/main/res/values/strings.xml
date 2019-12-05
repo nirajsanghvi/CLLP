@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Command Line for LP</string>
+
+    <string-array name="empty_array"/>
 </resources>

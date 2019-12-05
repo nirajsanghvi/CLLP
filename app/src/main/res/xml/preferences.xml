@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:key="app"
+        app:title="App">
+        <SwitchPreferenceCompat
+            app:key="enableReadSms"
+            android:title="React to SMS messages"
+            app:defaultValue="true"/>
+        <EditTextPreference
+            app:key="phoneNumber"
+            app:title="Your Phone Number"
+            app:icon="@drawable/ic_phone_24dp" />
+        <Preference
+            app:key="testText"
+            app:title="Send a test SMS"
+            app:summary="Tap here to test texting the number above"
+            app:icon="@drawable/ic_send_24dp"
+            app:dependency="phoneNumber"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="calendar"
+        app:title="Calendar">
+        <Preference
+            app:key="calEnable"
+            app:title="Grant Calendar Access"
+            app:summary="Tap here to give permissions to access the calendar for adding/viewing events"
+            app:icon="@drawable/ic_calendar_access_24dp"/>
+        <com.vanishingjar.cllp.CalendarMultiListPreference
+            app:key="calAgenda"
+            app:title="Agenda Calendars"
+            app:summary="Select which calendars to include when you request your upcoming events"
+            app:defaultValue="@array/empty_array"
+            app:icon="@drawable/ic_list_24dp" />
+        <com.vanishingjar.cllp.CalendarListPreference
+            app:key="calAdd"
+            app:title="Default New Event Calendar"
+            app:icon="@drawable/ic_event_24dp"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="maps"
+        app:title="Maps">
+        <EditTextPreference
+            app:key="googleMapsKey"
+            app:title="Your Google Maps API Key"
+            app:summary="To use Google Maps, provide an API key"
+            app:icon="@drawable/ic_key_24dp" />
+        <Preference
+            app:key="mapsHelp"
+            app:title="Get your Google Maps key"
+            app:summary="Tap here for instructions on getting an API key for the Directions and Places APIs"
+            app:icon="@drawable/ic_info_outline_24dp"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="yelp"
+        app:title="Yelp">
+        <EditTextPreference
+            app:key="yelpKey"
+            app:title="Your Yelp API Key"
+            app:summary="To use Yelp, provide an API key"
+            app:icon="@drawable/ic_key_24dp"/>
+        <Preference
+            app:key="yelpHelp"
+            app:title="Get your Yelp key"
+            app:summary="Tap here for instructions on getting an API key"
+            app:icon="@drawable/ic_info_outline_24dp"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>
