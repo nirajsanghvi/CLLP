@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Command Line for LP</string>
+    <string name="app_name">CLLP</string>
 
     <string-array name="empty_array"/>
 </resources>

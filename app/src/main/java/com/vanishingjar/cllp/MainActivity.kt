@@ -14,6 +14,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        title = "Command Line for Light Phone"
+
         if (checkSelfPermission(Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_DENIED) {
             requestPermissions(arrayOf(Manifest.permission.SEND_SMS), 1001)
         }
