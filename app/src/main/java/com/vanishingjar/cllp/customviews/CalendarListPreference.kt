@@ -49,10 +49,11 @@ class CalendarListPreference(
 
                 if (primary == "1") {
                     entries.add(0, name)
+                    entriesValues.add(0, id)
                 } else {
                     entries.add(name)
+                    entriesValues.add(id)
                 }
-                entriesValues.add(id)
             }
 
             cursor.close()
