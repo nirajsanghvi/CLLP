@@ -1,17 +1,17 @@
-package com.vanishingjar.cllp
+package com.vanishingjar.cllp.customviews
 
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.CalendarContract
 import android.util.AttributeSet
-import androidx.preference.ListPreference
+import androidx.preference.MultiSelectListPreference
 import java.util.*
 
-class CalendarListPreference(
+class CalendarMultiListPreference(
     context: Context,
     attrs: AttributeSet?
-) : ListPreference(context, attrs) {
+) : MultiSelectListPreference(context, attrs) {
     //var cr: ContentResolver? = null
     //var cursor: Cursor? = null
     var projection = arrayOf(
@@ -49,10 +49,11 @@ class CalendarListPreference(
 
                 if (primary == "1") {
                     entries.add(0, name)
+                    entriesValues.add(0, id)
                 } else {
                     entries.add(name)
+                    entriesValues.add(id)
                 }
-                entriesValues.add(id)
             }
 
             cursor.close()

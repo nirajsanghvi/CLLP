@@ -31,13 +31,13 @@
             app:title="Grant Calendar Access"
             app:summary="Tap here to give permissions to access the calendar for adding/viewing events"
             app:icon="@drawable/ic_calendar_access_24dp"/>
-        <com.vanishingjar.cllp.CalendarMultiListPreference
+        <com.vanishingjar.cllp.customviews.CalendarMultiListPreference
             app:key="calAgenda"
             app:title="Agenda Calendars"
             app:summary="Select which calendars to include when you request your upcoming events"
             app:defaultValue="@array/empty_array"
             app:icon="@drawable/ic_list_24dp" />
-        <com.vanishingjar.cllp.CalendarListPreference
+        <com.vanishingjar.cllp.customviews.CalendarListPreference
             app:key="calAdd"
             app:title="Default New Event Calendar"
             app:icon="@drawable/ic_event_24dp"/>
