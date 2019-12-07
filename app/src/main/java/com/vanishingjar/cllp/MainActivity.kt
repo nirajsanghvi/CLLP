@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
 
             val builder = AlertDialog.Builder(this)
             builder.setTitle("Enable Notification Access")
-            builder.setMessage("In order to function, this app requires notification access to be able to receive your SMS commands. Please enable notification access for Command Line for LP.")
+            builder.setMessage("In order to function, this app requires notification access to be able to receive your SMS commands. Please enable notification access for CLLP.")
             builder.setPositiveButton("OK"){dialog, which ->
                 startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
             }

@@ -29,7 +29,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val phNumSummaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
             if (preference.text.isNullOrEmpty()) {
-                "The number used for texting with country code (Ex: +13105551234)"
+                "The number used for texting with country code (Ex: 3105551234)"
             } else {
                 preference.text
             }
@@ -83,7 +83,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
                 val builder = AlertDialog.Builder(activity!!)
                 builder.setTitle("Did it work?")
-                builder.setMessage("You should receive your text within a few seconds. If it didn't work, double check that you've formatted your number correctly, including the plus sign and country code (Ex: +13105551234).")
+                builder.setMessage("You should receive your text within a few seconds. If it didn't work, double check that you've entered your number correctly and if you still have trouble, try including the plus sign and country code (Ex: +13105551234).")
                 builder.setPositiveButton("OK"){dialog, which ->
 
                 }
