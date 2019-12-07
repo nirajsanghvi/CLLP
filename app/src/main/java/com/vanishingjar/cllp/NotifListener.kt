@@ -15,6 +15,15 @@ import android.telephony.SmsManager
 import android.text.TextUtils
 import android.text.format.DateUtils
 import androidx.preference.PreferenceManager
+import com.vanishingjar.cllp.api.googlemaps.GoogleMapsService
+import com.vanishingjar.cllp.api.googlemaps.model.MapsResponse
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -44,6 +53,7 @@ class NotifListener : NotificationListenerService() {
             if (!textMsg.isNullOrEmpty()) {
                 val cllpRegex = Regex("cllp", RegexOption.IGNORE_CASE)
                 val mapsWalkRegex = Regex("(.*)\\s+walkto\\s+(.*)", RegexOption.IGNORE_CASE)
+                val mapsBikeRegex = Regex("(.*)\\s+biketo\\s+(.*)", RegexOption.IGNORE_CASE)
                 val mapsTransitRegex = Regex("(.*)\\s+transitto\\s+(.*)", RegexOption.IGNORE_CASE)
                 val mapsDriveRegex = Regex("(.*)\\s+driveto\\s+(.*)", RegexOption.IGNORE_CASE)
                 val yelpRegex = Regex("(.*)\\s+yelpme\\s+(.*)", RegexOption.IGNORE_CASE)
@@ -58,32 +68,44 @@ class NotifListener : NotificationListenerService() {
                     mapsWalkRegex.matches(textMsg) -> {
                         val walkMatches = mapsWalkRegex.matchEntire(textMsg)
                         if (walkMatches?.groups?.size == 3) {
-                            val orig = walkMatches.groups[1]?.value
-                            val dest = walkMatches.groups[2]?.value
+                            val orig = walkMatches.groups[1]?.value.toString()
+                            val dest = walkMatches.groups[2]?.value.toString()
+                            getDirections(orig, dest, "walking", prefs.getString("googleMapsKey", null))
+                            cancelNotification(sbn.key)
+                        }
+                    }
+                    mapsBikeRegex.matches(textMsg) -> {
+                        val bikeMatches = mapsBikeRegex.matchEntire(textMsg)
+                        if (bikeMatches?.groups?.size == 3) {
+                            val orig = bikeMatches.groups[1]?.value.toString()
+                            val dest = bikeMatches.groups[2]?.value.toString()
+                            getDirections(orig, dest, "bicycling", prefs.getString("googleMapsKey", null))
                             cancelNotification(sbn.key)
                         }
                     }
                     mapsTransitRegex.matches(textMsg) -> {
                         val transitMatches = mapsTransitRegex.matchEntire(textMsg)
                         if (transitMatches?.groups?.size == 3) {
-                            val orig = transitMatches.groups[1]?.value
-                            val dest = transitMatches.groups[2]?.value
+                            val orig = transitMatches.groups[1]?.value.toString()
+                            val dest = transitMatches.groups[2]?.value.toString()
+                            getDirections(orig, dest, "transit", prefs.getString("googleMapsKey", null))
                             cancelNotification(sbn.key)
                         }
                     }
                     mapsDriveRegex.matches(textMsg) -> {
                         val driveMatches = mapsDriveRegex.matchEntire(textMsg)
                         if (driveMatches?.groups?.size == 3) {
-                            val orig = driveMatches.groups[1]?.value
-                            val dest = driveMatches.groups[2]?.value
+                            val orig = driveMatches.groups[1]?.value.toString()
+                            val dest = driveMatches.groups[2]?.value.toString()
+                            getDirections(orig, dest, "driving", prefs.getString("googleMapsKey", null))
                             cancelNotification(sbn.key)
                         }
                     }
                     yelpRegex.matches(textMsg) -> {
                         val yelpMatches = yelpRegex.matchEntire(textMsg)
                         if (yelpMatches?.groups?.size == 3) {
-                            val orig = yelpMatches.groups[1]?.value
-                            val dest = yelpMatches.groups[2]?.value
+                            val orig = yelpMatches.groups[1]?.value.toString()
+                            val dest = yelpMatches.groups[2]?.value.toString()
                             cancelNotification(sbn.key)
                         }
                     }
@@ -179,6 +201,70 @@ class NotifListener : NotificationListenerService() {
                     }
                 }
             }
+        }
+    }
+
+    private fun getDirections(origin: String, destination: String, mode: String, apiKey: String?) {
+        apiKey?.let {key ->
+            val authInterceptor = Interceptor { chain ->
+                val newUrl = chain.request().url()
+                    .newBuilder()
+                    .addQueryParameter("key", key)
+                    .build()
+
+                val newRequest = chain.request()
+                    .newBuilder()
+                    .url(newUrl)
+                    .build()
+
+                chain.proceed(newRequest)
+            }
+
+            //OkhttpClient for building http request url
+            val googleMapsClient = OkHttpClient().newBuilder()
+                .addInterceptor(authInterceptor)
+                .build()
+
+            val retrofit = Retrofit.Builder()
+                .client(googleMapsClient)
+                .baseUrl("https://maps.googleapis.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+
+            val service: GoogleMapsService = retrofit.create<GoogleMapsService>(GoogleMapsService::class.java)
+
+            val call = service.getDirections(origin, destination, mode)
+
+            call.enqueue(object: Callback<MapsResponse> {
+                override fun onResponse(call: Call<MapsResponse>, response: Response<MapsResponse>) {
+                    response.body()?.let {
+
+                        if (it.routes.isNotEmpty() && it.routes[0].legs.isNotEmpty() && it.routes[0].legs[0].steps.isNotEmpty()) {
+                            val firstResult = it.routes[0].legs[0]
+                            var resultMessage = "Dist: " + firstResult.distance.text + ", Time: " + firstResult.duration.text + "\n\n"
+
+                            if (firstResult.steps.size > 40) {
+                                resultMessage += "The directions result has too many steps (" + firstResult.steps.size +"). Try breaking up your request into smaller chunks to prevent text overload."
+                            } else {
+                                for (step in firstResult.steps) {
+                                    val instructionNoHtml = step.instructions.replace(Regex("<div.*?>"), ", ").replace(Regex("<.*?>"), "").replace("&nbsp;", " ")
+                                    resultMessage += instructionNoHtml + " (" + step.distance.text + ")\n\n"
+                                }
+                            }
+
+                            sendTextMessage(resultMessage)
+                        }
+                    }
+                }
+
+                override fun onFailure(call: Call<MapsResponse>, t: Throwable) {
+                    sendTextMessage("Error: Google Maps API call failed. Double-check your API key and try again.")
+                }
+
+            })
+
+        } ?: run {
+            sendTextMessage("Unable to fulfill request, the Google Maps API key is not setup in the CLLP app.")
         }
     }
 
