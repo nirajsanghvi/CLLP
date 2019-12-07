@@ -14,13 +14,13 @@ class CalendarListPreference(
 ) : ListPreference(context, attrs) {
     //var cr: ContentResolver? = null
     //var cursor: Cursor? = null
-    var projection = arrayOf(
+    private var projection = arrayOf(
         CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
         CalendarContract.Calendars.IS_PRIMARY,
         CalendarContract.Calendars._ID
     )
-    var selection = "(" + CalendarContract.Calendars.VISIBLE + " = ?)"
-    var selectionArgs = arrayOf("1")
+    private var selection = "(" + CalendarContract.Calendars.VISIBLE + " = ?)"
+    private var selectionArgs = arrayOf("1")
 
     init {
         populateList()
