@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.provider.CalendarContract
 import android.telephony.SmsManager
 import androidx.appcompat.app.AlertDialog
 import androidx.preference.*
@@ -71,6 +72,32 @@ class SettingsFragment : PreferenceFragmentCompat() {
             if (preference.entry.isNullOrEmpty()) {
                 "Select a default calendar for new events"
             } else {
+                var projection = arrayOf(
+                    CalendarContract.Calendars.CALENDAR_TIME_ZONE
+                )
+                var selection = "(" + CalendarContract.Calendars._ID + " = ?)"
+                var selectionArgs = arrayOf(preference.value)
+
+                if (activity?.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
+                    && activity?.checkSelfPermission(Manifest.permission.WRITE_CALENDAR) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    val cr = activity!!.contentResolver
+                    val cursor = cr.query(
+                        CalendarContract.Calendars.CONTENT_URI,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null
+                    )
+                    while (cursor!!.moveToNext()) {
+                        val timezone = cursor.getString(0)
+
+                        prefs.edit().putString("calTimeZone", timezone).apply()
+                    }
+
+                    cursor.close()
+                }
+
                 preference.entry.toString()
             }
         }
