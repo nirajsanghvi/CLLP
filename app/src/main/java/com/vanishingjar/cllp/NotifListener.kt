@@ -51,6 +51,11 @@ class NotifListener : NotificationListenerService() {
             val textMsg = sbn.notification.extras.getCharSequence(Notification.EXTRA_TEXT)
 
             if (!textMsg.isNullOrEmpty()) {
+                if (prefs.getString("lastCommand", "")!!.contentEquals(textMsg)) {
+                    //Avoid processing duplicate notification triggers
+                    return
+                }
+
                 val cllpRegex = Regex("cllp", RegexOption.IGNORE_CASE)
                 val mapsWalkRegex = Regex("(.*)\\s+walkto\\s+(.*)", RegexOption.IGNORE_CASE)
                 val mapsBikeRegex = Regex("(.*)\\s+biketo\\s+(.*)", RegexOption.IGNORE_CASE)
@@ -67,6 +72,7 @@ class NotifListener : NotificationListenerService() {
                         return
                     }
                     mapsWalkRegex.matches(textMsg) -> {
+                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
                         val walkMatches = mapsWalkRegex.matchEntire(textMsg)
                         if (walkMatches?.groups?.size == 3) {
                             val orig = walkMatches.groups[1]?.value.toString()
@@ -76,6 +82,7 @@ class NotifListener : NotificationListenerService() {
                         }
                     }
                     mapsBikeRegex.matches(textMsg) -> {
+                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
                         val bikeMatches = mapsBikeRegex.matchEntire(textMsg)
                         if (bikeMatches?.groups?.size == 3) {
                             val orig = bikeMatches.groups[1]?.value.toString()
@@ -85,6 +92,7 @@ class NotifListener : NotificationListenerService() {
                         }
                     }
                     mapsTransitRegex.matches(textMsg) -> {
+                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
                         val transitMatches = mapsTransitRegex.matchEntire(textMsg)
                         if (transitMatches?.groups?.size == 3) {
                             val orig = transitMatches.groups[1]?.value.toString()
@@ -94,6 +102,7 @@ class NotifListener : NotificationListenerService() {
                         }
                     }
                     mapsDriveRegex.matches(textMsg) -> {
+                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
                         val driveMatches = mapsDriveRegex.matchEntire(textMsg)
                         if (driveMatches?.groups?.size == 3) {
                             val orig = driveMatches.groups[1]?.value.toString()
@@ -103,6 +112,7 @@ class NotifListener : NotificationListenerService() {
                         }
                     }
                     yelpRegex.matches(textMsg) -> {
+                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
                         val yelpMatches = yelpRegex.matchEntire(textMsg)
                         if (yelpMatches?.groups?.size == 3) {
                             val orig = yelpMatches.groups[1]?.value.toString()
@@ -112,6 +122,7 @@ class NotifListener : NotificationListenerService() {
                         }
                     }
                     calAddRegex.matches(textMsg) -> {
+                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
                         val calAddMatches = calAddRegex.matchEntire(textMsg)
                         if (calAddMatches?.groups?.size == 3) {
                             val datetime = calAddMatches.groups[1]?.value
@@ -120,6 +131,7 @@ class NotifListener : NotificationListenerService() {
                         }
                     }
                     calAgendaRegex.matches(textMsg) -> {
+                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
 
                         // Projection array. Creating indices for this array instead of doing dynamic lookups improves performance.
                         val event_projection: Array<String> = arrayOf(
@@ -194,6 +206,7 @@ class NotifListener : NotificationListenerService() {
                         cancelNotification(sbn.key)
                     }
                     helpRegex.matches(textMsg) -> {
+                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
                         val helpText = "CLLP Help:\n\n" +
                                 "Map: <origin> walkto|transitto|driveto|biketo <destination>\n\n" +
                                 "Yelp: <address> yelpme <search>\n\n" +
