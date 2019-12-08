@@ -2,6 +2,7 @@ package com.vanishingjar.cllp
 
 import android.Manifest
 import android.app.Notification
+import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
@@ -15,6 +16,7 @@ import android.telephony.SmsManager
 import android.text.TextUtils
 import android.text.format.DateUtils
 import androidx.preference.PreferenceManager
+import com.joestelmach.natty.Parser
 import com.vanishingjar.cllp.api.googlemaps.GoogleMapsService
 import com.vanishingjar.cllp.api.googlemaps.model.MapsResponse
 import okhttp3.Interceptor
@@ -124,9 +126,51 @@ class NotifListener : NotificationListenerService() {
                     calAddRegex.matches(textMsg) -> {
                         prefs.edit().putString("lastCommand", textMsg.toString()).commit()
                         val calAddMatches = calAddRegex.matchEntire(textMsg)
-                        if (calAddMatches?.groups?.size == 3) {
-                            val datetime = calAddMatches.groups[1]?.value
-                            val title = calAddMatches.groups[2]?.value
+                        if (calAddMatches?.groups?.size == 4) {
+                            val title = calAddMatches.groups[1]?.value
+                            val datetime = calAddMatches.groups[2]?.value
+                            val location = calAddMatches.groups[3]?.value
+                            val timezoneName = prefs.getString("calTimeZone", "America/Los_Angeles")
+                            val timezone = TimeZone.getTimeZone(timezoneName)
+                            val calID = prefs.getString("calAdd", "")
+
+                            if (!calID.isNullOrEmpty()) {
+                                val parser = Parser(timezone)
+                                val dateGroups = parser.parse(datetime)
+                                if (dateGroups.isEmpty() || dateGroups[0].dates.isEmpty()) {
+                                    sendTextMessage("CLLP Error: Could not understand the date you provided for the event.")
+                                } else {
+                                    var parsedDate = dateGroups[0].dates[0]
+
+                                    //Make sure the date is in the future
+                                    if (parsedDate.time < System.currentTimeMillis()) {
+                                        val cal = Calendar.getInstance(timezone)
+                                        cal.time = parsedDate
+                                        cal.add(Calendar.YEAR, 1)
+                                        parsedDate = cal.time
+                                    }
+
+                                    val values = ContentValues().apply {
+                                        put(CalendarContract.Events.DTSTART, parsedDate.time)
+                                        put(CalendarContract.Events.DTEND, parsedDate.time + DateUtils.HOUR_IN_MILLIS)
+                                        put(CalendarContract.Events.TITLE, title)
+                                        put(CalendarContract.Events.DESCRIPTION, "")
+                                        put(CalendarContract.Events.CALENDAR_ID, calID)
+                                        put(CalendarContract.Events.EVENT_TIMEZONE, timezoneName)
+                                        put(CalendarContract.Events.EVENT_LOCATION, location)
+                                    }
+
+                                    contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
+
+                                    //val uri = contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
+                                    //val eventID = uri?.lastPathSegment?.toLong()
+
+                                    sendTextMessage("CLLP Result: The event has been added to your calendar.")
+                                }
+                            } else {
+                                sendTextMessage("CLLP Error: You need to define your default calendar in the CLLP app first.")
+                            }
+
                             cancelNotification(sbn.key)
                         }
                     }
