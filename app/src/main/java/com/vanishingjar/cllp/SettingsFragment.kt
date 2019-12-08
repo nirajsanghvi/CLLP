@@ -25,7 +25,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 "CLLP is ignoring SMS commands"
             }
         }
-
         findPreference<SwitchPreferenceCompat>("enableReadSms")?.summaryProvider = enableSmsSummaryProvider
 
         val phNumSummaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
@@ -35,7 +34,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 preference.text
             }
         }
-
         findPreference<EditTextPreference>("phoneNumber")?.summaryProvider = phNumSummaryProvider
 
         val googleMapsSummaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
@@ -45,18 +43,17 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 "Google Maps API key is active"
             }
         }
-
         findPreference<EditTextPreference>("googleMapsKey")?.summaryProvider = googleMapsSummaryProvider
 
-        val yelpSummaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
-            if (preference.text.isNullOrEmpty()) {
-                "To use Yelp, please provide an API key"
-            } else {
-                "Yelp API key is active"
-            }
-        }
-
-        findPreference<EditTextPreference>("yelpKey")?.summaryProvider = yelpSummaryProvider
+//        val yelpSummaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
+//            if (preference.text.isNullOrEmpty()) {
+//                "To use Yelp, please provide an API key"
+//            } else {
+//                "Yelp API key is active"
+//            }
+//        }
+//
+//        findPreference<EditTextPreference>("yelpKey")?.summaryProvider = yelpSummaryProvider
 
         val calAgendaSummaryProvider = Preference.SummaryProvider<CalendarMultiListPreference> { preference ->
             if (preference.values.isEmpty()) {
@@ -65,7 +62,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 preference.values.size.toString() + " calendar(s) selected"
             }
         }
-
         findPreference<CalendarMultiListPreference>("calAgenda")?.summaryProvider = calAgendaSummaryProvider
 
         val calAddSummaryProvider = Preference.SummaryProvider<CalendarListPreference> { preference ->
@@ -101,7 +97,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 preference.entry.toString()
             }
         }
-
         findPreference<CalendarListPreference>("calAdd")?.summaryProvider = calAddSummaryProvider
 
         findPreference<Preference>("testText")?.setOnPreferenceClickListener { preference ->
@@ -129,14 +124,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-        findPreference<Preference>("yelpHelp")?.setOnPreferenceClickListener { preference ->
-            val url = "https://www.yelp.com/developers/faq"
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse(url)
-            startActivity(intent)
-
-            true
-        }
+//        findPreference<Preference>("yelpHelp")?.setOnPreferenceClickListener { preference ->
+//            val url = "https://www.yelp.com/developers/faq"
+//            val intent = Intent(Intent.ACTION_VIEW)
+//            intent.data = Uri.parse(url)
+//            startActivity(intent)
+//
+//            true
+//        }
 
         checkCalendarAccess()
 

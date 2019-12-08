@@ -63,7 +63,7 @@ class NotifListener : NotificationListenerService() {
                 val mapsBikeRegex = Regex("(.*)\\s+biketo\\s+(.*)", RegexOption.IGNORE_CASE)
                 val mapsTransitRegex = Regex("(.*)\\s+transitto\\s+(.*)", RegexOption.IGNORE_CASE)
                 val mapsDriveRegex = Regex("(.*)\\s+driveto\\s+(.*)", RegexOption.IGNORE_CASE)
-                val yelpRegex = Regex("(.*)\\s+yelpme\\s+(.*)", RegexOption.IGNORE_CASE)
+                //val yelpRegex = Regex("(.*)\\s+yelpme\\s+(.*)", RegexOption.IGNORE_CASE)
                 val calAddRegex = Regex("addtocal\\s+(.*)\\s+on\\s+(.*)\\s+at\\s+(.*)", RegexOption.IGNORE_CASE)
                 val calAgendaRegex = Regex("calagenda", RegexOption.IGNORE_CASE)
                 val helpRegex = Regex("helpme", RegexOption.IGNORE_CASE)
@@ -114,16 +114,16 @@ class NotifListener : NotificationListenerService() {
                             cancelNotification(sbn.key)
                         }
                     }
-                    yelpRegex.matches(textMsg) -> {
-                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
-                        val yelpMatches = yelpRegex.matchEntire(textMsg)
-                        if (yelpMatches?.groups?.size == 3) {
-                            val orig = yelpMatches.groups[1]?.value.toString()
-                            val searchTerm = yelpMatches.groups[2]?.value.toString()
-                            val star = "★"
-                            cancelNotification(sbn.key)
-                        }
-                    }
+//                    yelpRegex.matches(textMsg) -> {
+//                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
+//                        val yelpMatches = yelpRegex.matchEntire(textMsg)
+//                        if (yelpMatches?.groups?.size == 3) {
+//                            val orig = yelpMatches.groups[1]?.value.toString()
+//                            val searchTerm = yelpMatches.groups[2]?.value.toString()
+//                            val star = "★"
+//                            cancelNotification(sbn.key)
+//                        }
+//                    }
                     calAddRegex.matches(textMsg) -> {
                         prefs.edit().putString("lastCommand", textMsg.toString()).commit()
                         val calAddMatches = calAddRegex.matchEntire(textMsg)
@@ -255,7 +255,7 @@ class NotifListener : NotificationListenerService() {
                         prefs.edit().putString("lastCommand", textMsg.toString()).commit()
                         val helpText = "CLLP Help:\n\n" +
                                 "Map: <origin> walkto|transitto|driveto|biketo <destination>\n\n" +
-                                "Yelp: <address> yelpme <search>\n\n" +
+                                //"Yelp: <address> yelpme <search>\n\n" +
                                 "Get cal events: calagenda\n\n" +
                                 "Add cal event: addtocal <title> on <datetime> at <location>"
                         sendTextMessage(helpText)
