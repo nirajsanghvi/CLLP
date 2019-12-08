@@ -171,6 +171,7 @@ class NotifListener : NotificationListenerService() {
                                 var eventCount = 0
                                 val dateFormatter = SimpleDateFormat("EEE MMM d, H:mm", Locale.US)
                                 val endTimeFormatter = SimpleDateFormat("H:mm", Locale.US)
+                                var resultMessage = "CLLP Agenda:\n\n"
                                 while (cur.moveToNext()) {
                                     // Get the field values
                                     val eventTitle: String = cur.getString(projection_title_index)
@@ -185,11 +186,9 @@ class NotifListener : NotificationListenerService() {
                                         " - " + endTimeFormatter.format(Date(endTime))
                                     }
 
-                                    val eventMessage = eventTitle + "\n" +
+                                    resultMessage += eventTitle + "\n" +
                                             dateString + "\n" +
-                                            location
-
-                                    sendTextMessage(eventMessage, true)
+                                            location + "\n\n"
 
                                     //Prevent sending too many texts
                                     eventCount += 1
@@ -197,10 +196,12 @@ class NotifListener : NotificationListenerService() {
                                     if (eventCount == eventLimit) break
                                 }
 
+                                sendTextMessage(resultMessage)
+
                                 cur.close()
                             }
                         } else {
-                            sendTextMessage("Error: You need to first enable calendar permissions in the CLLP app.")
+                            sendTextMessage("CLLP Error: You need to first enable calendar permissions in the CLLP app.")
                         }
 
                         cancelNotification(sbn.key)
@@ -279,13 +280,13 @@ class NotifListener : NotificationListenerService() {
                 }
 
                 override fun onFailure(call: Call<MapsResponse>, t: Throwable) {
-                    sendTextMessage("Error: Google Maps API call failed. Double-check your API key and try again.")
+                    sendTextMessage("CLLP Error: Google Maps API call failed. Double-check your API key and try again.")
                 }
 
             })
 
         } ?: run {
-            sendTextMessage("Unable to fulfill request, the Google Maps API key is not setup in the CLLP app.")
+            sendTextMessage("CLLP Error: Unable to fulfill request, the Google Maps API key is not setup in the CLLP app.")
         }
     }
 
