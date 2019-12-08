@@ -258,14 +258,18 @@ class NotifListener : NotificationListenerService() {
 
                         if (it.routes.isNotEmpty() && it.routes[0].legs.isNotEmpty() && it.routes[0].legs[0].steps.isNotEmpty()) {
                             val firstResult = it.routes[0].legs[0]
-                            var resultMessage = "Dist: " + firstResult.distance.text + ", Time: " + firstResult.duration.text + "\n\n"
+                            var resultMessage = "CLLP Results - Dist: " + firstResult.distance.text + ", Time: " + firstResult.duration.text + ", Steps: " + firstResult.steps.size + "\n\n"
 
                             if (firstResult.steps.size > 50) {
                                 resultMessage += "The directions result has too many steps (" + firstResult.steps.size +"). Try breaking up your request into smaller chunks to prevent text overload."
                             } else {
                                 for (step in firstResult.steps) {
+                                    val transitPrefix = if (step.travelMode.toLowerCase() == "transit") "[" + step.transitDetails?.line?.completeName + "] " else ""
+                                    val transitSuffix = if (step.travelMode.toLowerCase() == "transit") " from " + step.transitDetails?.departureStop?.name + ". Ride for " + step.transitDetails?.numStops + " stop(s) to " + step.transitDetails?.arrivalStop?.name else ""
+
                                     val instructionNoHtml = step.instructions.replace(Regex("<div.*?>"), ", ").replace(Regex("<.*?>"), "").replace("&nbsp;", " ")
-                                    resultMessage += instructionNoHtml + " (" + step.distance.text + ")\n\n"
+
+                                    resultMessage += transitPrefix + instructionNoHtml + transitSuffix + " (" + step.distance.text + ")\n\n"
                                 }
                             }
 
