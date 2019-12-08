@@ -29,7 +29,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val phNumSummaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
             if (preference.text.isNullOrEmpty()) {
-                "The number used for texting with country code (Ex: 3105551234)"
+                "The number to use for texting (Ex: 3105551234)"
             } else {
                 preference.text
             }
@@ -38,7 +38,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val googleMapsSummaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
             if (preference.text.isNullOrEmpty()) {
-                "To use Google Maps, please provide an API key"
+                "To use Google Maps, please provide your API key"
             } else {
                 "Google Maps API key is active"
             }
@@ -47,7 +47,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
 //        val yelpSummaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
 //            if (preference.text.isNullOrEmpty()) {
-//                "To use Yelp, please provide an API key"
+//                "To use Yelp, please provide your API key"
 //            } else {
 //                "Yelp API key is active"
 //            }
