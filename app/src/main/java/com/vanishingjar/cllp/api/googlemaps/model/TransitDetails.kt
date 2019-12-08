@@ -14,5 +14,6 @@ data class TransitDetails(
     @SerializedName("departure_stop") var departureStop: TransitStop,
     @SerializedName("departure_time") var departureTime: TransitTime,
     @SerializedName("headsign") var headSign: String,
-    @SerializedName("line") var line: TransitLine
+    @SerializedName("line") var line: TransitLine,
+    @SerializedName("num_stops") var numStops: String
 ) : Parcelable

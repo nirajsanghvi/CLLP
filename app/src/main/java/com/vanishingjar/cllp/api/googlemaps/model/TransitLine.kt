@@ -16,6 +16,12 @@ data class TransitLine(
     @SerializedName("vehicle") var vehicle: TransitVehicle
 ) : Parcelable {
 
+    val completeName: String
+        get() {
+            return if (!shortName.isNullOrEmpty()) "$shortName - $name" else if (!name.isNullOrEmpty()) "$name" else "$vehicle.$name"
+        }
+
+
     val shortNameOrName: String
         get() {
             shortName?.let { return it }
