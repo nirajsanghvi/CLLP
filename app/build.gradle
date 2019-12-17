@@ -8,7 +8,7 @@ android {
     compileSdkVersion 29
     defaultConfig {
         applicationId "com.vanishingjar.cllp"
-        minSdkVersion 26
+        minSdkVersion 24
         targetSdkVersion 29
         versionCode 1
         versionName "1.0.0"
@@ -26,6 +26,12 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
+    }
+    android.applicationVariants.all { variant ->
+        variant.outputs.all {
+            def capVariantName = variant.name.capitalize()
+            outputFileName = "CLLP_" + capVariantName + "_v${variant.versionName}.apk"
+        }
     }
 }
 
