@@ -4,9 +4,11 @@ import android.Manifest
 import android.app.Notification
 import android.content.ContentValues
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
+import android.os.Bundle
 import android.os.IBinder
 import android.provider.CalendarContract
 import android.provider.Telephony
@@ -15,7 +17,9 @@ import android.service.notification.StatusBarNotification
 import android.telephony.SmsManager
 import android.text.TextUtils
 import android.text.format.DateUtils
+import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.joestelmach.natty.Parser
 import com.vanishingjar.cllp.api.googlemaps.GoogleMapsService
 import com.vanishingjar.cllp.api.googlemaps.model.MapsResponse
@@ -49,8 +53,8 @@ class NotifListener : NotificationListenerService() {
             val textMsg = sbn.notification.extras.getCharSequence(Notification.EXTRA_TEXT)
 
             if (!textMsg.isNullOrEmpty()) {
-                if (prefs.getString("lastCommand", "")!!.contentEquals(textMsg)) {
-                    //Avoid processing duplicate notification triggers
+                if (prefs.getString("lastCommand", "")!!.contentEquals(textMsg) && (System.currentTimeMillis() - prefs.getLong("lastCommandExecutionTime", 0)) < DateUtils.SECOND_IN_MILLIS * 10) {
+                    //Avoid processing duplicate notification triggers and spamming...ignore the same command coming in within a 10 second cool-off period
                     return
                 }
 
@@ -71,7 +75,7 @@ class NotifListener : NotificationListenerService() {
                         return
                     }
                     mapsWalkRegex.matches(textMsg) -> {
-                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
+                        logCommandUsage("mapsWalking", textMsg.toString(), prefs)
                         val walkMatches = mapsWalkRegex.matchEntire(textMsg)
                         if (walkMatches?.groups?.size == 3) {
                             val orig = walkMatches.groups[1]?.value.toString()
@@ -81,7 +85,7 @@ class NotifListener : NotificationListenerService() {
                         }
                     }
                     mapsBikeRegex.matches(textMsg) -> {
-                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
+                        logCommandUsage("mapsBiking", textMsg.toString(), prefs)
                         val bikeMatches = mapsBikeRegex.matchEntire(textMsg)
                         if (bikeMatches?.groups?.size == 3) {
                             val orig = bikeMatches.groups[1]?.value.toString()
@@ -91,7 +95,7 @@ class NotifListener : NotificationListenerService() {
                         }
                     }
                     mapsTransitRegex.matches(textMsg) -> {
-                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
+                        logCommandUsage("mapsTransit", textMsg.toString(), prefs)
                         val transitMatches = mapsTransitRegex.matchEntire(textMsg)
                         if (transitMatches?.groups?.size == 3) {
                             val orig = transitMatches.groups[1]?.value.toString()
@@ -101,7 +105,7 @@ class NotifListener : NotificationListenerService() {
                         }
                     }
                     mapsDriveRegex.matches(textMsg) -> {
-                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
+                        logCommandUsage("mapsDriving", textMsg.toString(), prefs)
                         val driveMatches = mapsDriveRegex.matchEntire(textMsg)
                         if (driveMatches?.groups?.size == 3) {
                             val orig = driveMatches.groups[1]?.value.toString()
@@ -121,7 +125,7 @@ class NotifListener : NotificationListenerService() {
 //                        }
 //                    }
                     calAddRegex.matches(textMsg) -> {
-                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
+                        logCommandUsage("calAgenda", textMsg.toString(), prefs)
                         val calAddMatches = calAddRegex.matchEntire(textMsg)
                         if (calAddMatches?.groups?.size == 4) {
                             val title = calAddMatches.groups[1]?.value
@@ -172,7 +176,7 @@ class NotifListener : NotificationListenerService() {
                         }
                     }
                     calAgendaRegex.matches(textMsg) -> {
-                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
+                        logCommandUsage("calAdd", textMsg.toString(), prefs)
 
                         // Projection array. Creating indices for this array instead of doing dynamic lookups improves performance.
                         val event_projection: Array<String> = arrayOf(
@@ -242,14 +246,14 @@ class NotifListener : NotificationListenerService() {
                                 cur.close()
                             }
                         } else {
-                            sendTextMessage("CLLP Error: You need to first enable calendar permissions in the CLLP app.")
+                            sendTextMessage("CLLP Error: You need to first enable calendar permissions and select your calendar(s) in the CLLP app.")
                         }
 
                         cancelNotification(sbn.key)
                     }
                     helpRegex.matches(textMsg) -> {
-                        UpdateChecker.checkForNewVersion(this, prefs)
-                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
+                        logCommandUsage("helpme", textMsg.toString(), prefs)
+
                         val helpText = "CLLP Help:\n\n" +
                                 "Map: <origin> walkto|transitto|driveto|biketo <destination>\n\n" +
                                 //"Yelp: <address> yelpme <search>\n\n" +
@@ -343,5 +347,19 @@ class NotifListener : NotificationListenerService() {
                 smsManager.sendMultipartTextMessage(phoneNumber, null, dividedMessage, null, null)
             }
         }
+    }
+
+    private fun logCommandUsage(commandName: String, textMsgString: String, prefs: SharedPreferences) {
+        prefs.edit(commit = true) {
+            putString("lastCommand", textMsgString)
+            putLong("lastCommandExecutionTime", System.currentTimeMillis())
+        }
+
+        UpdateChecker.checkForNewVersion(this, prefs)
+
+        val analytics = FirebaseAnalytics.getInstance(this)
+        val bundle = Bundle()
+        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, commandName)
+        analytics.logEvent("ranCommand", bundle)
     }
 }
