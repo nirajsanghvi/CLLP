@@ -32,4 +32,4 @@ The CLLP app tries to explain what permissions are needed for different things. 
 
 If you like the app and want to support its ongoing development, you can [buy me a beer](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=CBGPF2LBBH3QW&currency_code=USD&source=url) which is much appreciated! 🍻Issues and PRs are also welcome, though I'll note that I intend to adhere strictly to the Light Phone ethos of only providing utility and reducing distractions.
 
-*__Note:__ If you want to fork this repo, make sure to update the UpdateChecker which is hardcoded to look for releases from this repo, and provide your own (or disable) Firebase Analytics, which I'm relying on for crash reports since this app is not in the Play Store.*
+*__Note:__ If you want to fork this repo, make sure to update the [UpdateChecker](https://github.com/nirajsanghvi/CLLP/blob/master/app/src/main/java/com/vanishingjar/cllp/UpdateChecker.kt) which is hardcoded to look for releases from this repo, and provide your own (or disable) Firebase Analytics, which I'm relying on for crash reports since this app is not in the Play Store.*
