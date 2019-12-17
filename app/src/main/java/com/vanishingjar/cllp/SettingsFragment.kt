@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.CalendarContract
 import android.telephony.SmsManager
@@ -137,6 +138,37 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         findPreference<Preference>("calEnable")?.setOnPreferenceClickListener { preference ->
             requestPermissions(arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR), 1000)
+
+            true
+        }
+
+        findPreference<Preference>("sendFeedback")?.setOnPreferenceClickListener { preference ->
+            val feedbackSubjectLine = "CLLP Android App Feedback"
+            val feedbackEmailBody = "\n\n\n\n" +
+                    "=== Device information === \n" +
+                    "OS Version: ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT}) \n" +
+                    "Device: ${Build.DEVICE} \n" +
+                    "Model: ${Build.MODEL} (${Build.PRODUCT}) \n" +
+                    "CLLP app version: ${BuildConfig.VERSION_NAME}"
+            val feedbackEmailAddress = arrayOf("vanishingjar" + "@gmail.com")
+
+            val mailIntent = Intent(Intent.ACTION_SENDTO)
+            mailIntent.data = Uri.parse("mailto:") // only email apps should handle this
+            mailIntent.putExtra(Intent.EXTRA_SUBJECT, feedbackSubjectLine)
+            mailIntent.putExtra(Intent.EXTRA_TEXT, feedbackEmailBody)
+            mailIntent.putExtra(Intent.EXTRA_EMAIL, feedbackEmailAddress)
+
+            if (mailIntent.resolveActivity(activity!!.packageManager) != null) {
+                startActivity(mailIntent)
+            } else {
+                val generalSendIntent = Intent(Intent.ACTION_SEND)
+                generalSendIntent.putExtra(Intent.EXTRA_SUBJECT, feedbackSubjectLine)
+                generalSendIntent.putExtra(Intent.EXTRA_TEXT, feedbackEmailBody)
+                generalSendIntent.putExtra(Intent.EXTRA_EMAIL, feedbackEmailAddress)
+                if (generalSendIntent.resolveActivity(activity!!.packageManager) != null) {
+                    startActivity(generalSendIntent)
+                }
+            }
 
             true
         }
