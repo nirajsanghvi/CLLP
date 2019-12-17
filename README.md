@@ -11,14 +11,14 @@ Unfortunately CLLP is not available on Google Play due to their [heavy-handed cr
 
 Current features supported by CLLP:
 * Google Maps directions
-  * Walking <pre>[origin] *walkto* [destination]</pre>
-  * Transit <pre>[origin] *transitto* [destination]</pre>
-  * Driving <pre>[origin] *driveto* [destination]</pre>
-  * Bicycling <pre>[origin] *biketo* [destination]</pre>
+  * Walking - `[origin] walkto [destination]`
+  * Transit - `[origin] transitto [destination]`
+  * Driving - `[origin] driveto [destination]`
+  * Bicycling - `[origin] biketo [destination]`
 * Google Calendar
-  * Agenda for next 3 days <pre>*calagenda*</pre>
-  * Add event to calendar <pre>*addtocal* [event title] on [date and time] at [location]</pre>
-* List all available commands <pre>*helpme*</pre>
+  * Agenda for next 3 days - `calagenda`
+  * Add event to calendar - `addtocal [event title] on [date and time] at [location]`
+* List all available commands - `helpme`
 
 ![App help demo](https://i.imgur.com/Cq86Bid.gif)
 
