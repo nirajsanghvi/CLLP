@@ -19,6 +19,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(activity)
 
+        UpdateChecker.checkForNewVersion(activity!!, prefs)
+
         val enableSmsSummaryProvider = Preference.SummaryProvider<SwitchPreferenceCompat> { preference ->
             if (preference.isChecked) {
                 "CLLP is ready to respond to SMS commands"
