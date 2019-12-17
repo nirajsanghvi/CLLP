@@ -31,10 +31,6 @@ import java.util.*
 
 
 class NotifListener : NotificationListenerService() {
-//    init {
-//        val blah = "blah"
-//    }
-
     override fun onBind(intent: Intent?): IBinder? {
         return super.onBind(intent)
     }
@@ -252,6 +248,7 @@ class NotifListener : NotificationListenerService() {
                         cancelNotification(sbn.key)
                     }
                     helpRegex.matches(textMsg) -> {
+                        UpdateChecker.checkForNewVersion(this, prefs)
                         prefs.edit().putString("lastCommand", textMsg.toString()).commit()
                         val helpText = "CLLP Help:\n\n" +
                                 "Map: <origin> walkto|transitto|driveto|biketo <destination>\n\n" +
@@ -270,7 +267,7 @@ class NotifListener : NotificationListenerService() {
     private fun getDirections(origin: String, destination: String, mode: String, apiKey: String?) {
         apiKey?.let {key ->
             val authInterceptor = Interceptor { chain ->
-                val newUrl = chain.request().url()
+                val newUrl = chain.request().url
                     .newBuilder()
                     .addQueryParameter("key", key)
                     .build()
