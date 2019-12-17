@@ -79,4 +79,14 @@
 <!--            app:icon="@drawable/ic_info_outline_24dp"/>-->
     </PreferenceCategory>
 
+    <PreferenceCategory
+        android:key="help"
+        app:title="Help">
+        <Preference
+            app:key="sendFeedback"
+            app:title="Help and feedback"
+            app:summary="Tap here to send questions and feedback"
+            app:icon="@drawable/ic_send_24dp"/>
+    </PreferenceCategory>
+
 </PreferenceScreen>
