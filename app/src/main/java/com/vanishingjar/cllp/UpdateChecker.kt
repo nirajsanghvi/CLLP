@@ -32,12 +32,6 @@ class UpdateChecker {
         private const val gitHubRepo = "CLLP"
 
         fun checkForNewVersion(context: Context, prefs: SharedPreferences) {
-            //Avoid spamming notifications in case the user didn't update after the last one for some reason, use a 5 day cool-off period
-            val lastUpdateNotification = prefs.getLong("lastUpdateNotification", 0)
-            if (System.currentTimeMillis() - lastUpdateNotification < 5 * DateUtils.DAY_IN_MILLIS) {
-                return
-            }
-
             val analytics = FirebaseAnalytics.getInstance(context)
 
             val interceptor = HttpLoggingInterceptor()
@@ -58,23 +52,37 @@ class UpdateChecker {
                     response.body()?.let { ghResponse ->
                         if (ghResponse.assets.isNotEmpty()) {
                             if (BuildConfig.VERSION_NAME != ghResponse.name) {
+                                //Avoid spamming notifications for the same version in case the user didn't update after the last notification for some reason, use a 3 day cool-off period
+                                val lastUpdateNotification = prefs.getLong("lastUpdateNotification", 0)
+                                val lastVersion = prefs.getString("lastUpdateDetectedVersion", "")
+                                if (ghResponse.name == lastVersion && System.currentTimeMillis() - lastUpdateNotification < 3 * DateUtils.DAY_IN_MILLIS) {
+                                    return
+                                }
+
                                 notifyUpdateIsAvailable(context, ghResponse.name, ghResponse.htmlUrl)
                                 prefs.edit {
                                     putLong("lastUpdateNotification", System.currentTimeMillis())
+                                    putString("lastUpdateDetectedVersion", ghResponse.name)
                                 }
 
                                 val bundle = Bundle()
-                                bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "001")
-                                bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "updateNotification")
-                                bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, ghResponse.name)
-                                analytics.logEvent(FirebaseAnalytics.Event.VIEW_ITEM, bundle)
+                                bundle.putString("currentInstalledVersion", BuildConfig.VERSION_NAME)
+                                bundle.putString("newDetectedVersion", ghResponse.name)
+                                analytics.logEvent("gitHubUpdateNotif", bundle)
                             }
                         }
+                    } ?: run {
+                        val bundle = Bundle()
+                        bundle.putString("currentInstalledVersion", BuildConfig.VERSION_NAME)
+                        analytics.logEvent("gitHubEmptyResponse", bundle)
                     }
                 }
 
                 override fun onFailure(call: Call<GitHubResponse>, t: Throwable) {
                     Log.d("UpdateChecker", "Unable to retrieve latest app version info from GitHub")
+                    val bundle = Bundle()
+                    bundle.putString("currentInstalledVersion", BuildConfig.VERSION_NAME)
+                    analytics.logEvent("gitHubFailure", bundle)
                 }
             })
         }
