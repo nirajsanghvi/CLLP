@@ -286,7 +286,7 @@ class NotifListener : NotificationListenerService() {
                 chain.proceed(newRequest)
             }
 
-            //OkhttpClient for building http request url
+            //OkHttpClient for building http request url with API key query param
             val googleMapsClient = OkHttpClient().newBuilder()
                 .addInterceptor(authInterceptor)
                 .build()
@@ -304,7 +304,6 @@ class NotifListener : NotificationListenerService() {
             call.enqueue(object: Callback<MapsResponse> {
                 override fun onResponse(call: Call<MapsResponse>, response: Response<MapsResponse>) {
                     response.body()?.let {
-
                         if (it.routes.isNotEmpty() && it.routes[0].legs.isNotEmpty() && it.routes[0].legs[0].steps.isNotEmpty()) {
                             val firstResult = it.routes[0].legs[0]
                             var resultMessage = "CLLP Results - Dist: " + firstResult.distance.text + ", Time: " + firstResult.duration.text + ", Steps: " + firstResult.steps.size + "\n\n"
@@ -330,7 +329,6 @@ class NotifListener : NotificationListenerService() {
                 override fun onFailure(call: Call<MapsResponse>, t: Throwable) {
                     sendTextMessage("CLLP Error: Google Maps API call failed. Double-check your API key and try again.")
                 }
-
             })
 
         } ?: run {
@@ -341,18 +339,15 @@ class NotifListener : NotificationListenerService() {
     private fun getYelpSearchResults(origin: String, searchTerm: String, apiKey: String?) {
         apiKey?.let {key ->
             val authInterceptor = Interceptor { chain ->
-                //val url = chain.request().url
-
                 val newRequest = chain.request()
                     .newBuilder()
-                    //.url(url)
                     .addHeader("Authorization", "Bearer $key")
                     .build()
 
                 chain.proceed(newRequest)
             }
 
-            //OkhttpClient for building http request url
+            //OkHttpClient for building http request url with auth header
             val yelpClient = OkHttpClient().newBuilder()
                 .addInterceptor(authInterceptor)
                 .build()
@@ -370,13 +365,11 @@ class NotifListener : NotificationListenerService() {
             call.enqueue(object: Callback<SearchResponse> {
                 override fun onResponse(call: Call<SearchResponse>, response: Response<SearchResponse>) {
                     response.body()?.let {
-
                         if (it.businesses.isNotEmpty()) {
                             var resultMessage = "CLLP Yelp Results: \n\n"
-                            val star = "★"
 
                             it.businesses.take(5).forEach {bus ->
-                                val stars = if (bus.rating != null) star.repeat(bus.rating.toInt()) else "N/A"
+                                val stars = if (bus.rating != null) "★".repeat(bus.rating.toInt()) else "N/A"
                                 val mileDistance = if (bus.distance != null) String.format("%.1f", bus.distance * 0.000621371192) + "mi" else "N/A"
                                 resultMessage += bus.name +
                                         " (${bus.price}, $stars, ${bus.reviewCount} reviews)\n" +
@@ -393,7 +386,6 @@ class NotifListener : NotificationListenerService() {
                 override fun onFailure(call: Call<SearchResponse>, t: Throwable) {
                     sendTextMessage("CLLP Error: Yelp API call failed. Double-check your API key and try again.")
                 }
-
             })
 
         } ?: run {
