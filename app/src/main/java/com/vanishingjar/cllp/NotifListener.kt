@@ -258,7 +258,7 @@ class NotifListener : NotificationListenerService() {
 
                         val helpText = "CLLP Help:\n\n" +
                                 "Map: <origin> walkto|transitto|driveto|biketo <destination>\n\n" +
-                                //"Yelp: <address> yelpme <search>\n\n" +
+                                "Yelp: <current location> yelpme <search category or business name>\n\n" +
                                 "Get cal events: calagenda\n\n" +
                                 "Add cal event: addtocal <title> on <datetime> at <location>"
                         sendTextMessage(helpText)
