@@ -19,15 +19,17 @@ Unfortunately CLLP is not available on Google Play due to their [heavy-handed cr
 * Google Calendar
   * Agenda for next 3 days - `calagenda`
   * Add event to calendar - `addtocal [event title] on [date and time] at [location]`
+* Yelp Business Search
+  * Business Name - `[current location] yelpme [name of business]`
+  * Type/Category of food (aka Chinese, Mexican, etc) - `[current location] yelpme [type of food]`
 * List all available commands - `helpme`
 
 ![App help demo](https://i.imgur.com/Cq86Bid.gif)
 
 # Wishlist
-* Yelp (search by business name or type of food, etc.)
-* Use the Android device location to help give a hint when using commands looking for places so you don't have to type as much on the Light Phone
 * Weather
 * Wikipedia
+* Use the Android device location to help give a hint when using commands looking for places so you don't have to type as much on the Light Phone
 
 # Permissions and API Keys
 The CLLP app tries to explain what permissions are needed for different things. For instance, it absolutely needs notification access (to catch incoming SMS commands) and SMS sending permission (to send back results). Currently you can optionally give calendar access permission for the agenda and event adding features, and a Google Maps API key you generate to get directions (this is because [they changed the pricing model](https://www.reddit.com/r/GoogleMaps/comments/8gl0zl/google_maps_api_pricing_change/) last year so it's prohibitively expensive for me to use my own API key for all users). The intention is to have all permissions be optional so you can only grant the ones you need for the features you want.
