@@ -61,22 +61,16 @@
     <PreferenceCategory
         android:key="yelp"
         app:title="Yelp">
+        <EditTextPreference
+            app:key="yelpKey"
+            app:title="Your Yelp API Key"
+            app:summary="To use Yelp, provide an API key"
+            app:icon="@drawable/ic_key_24dp"/>
         <Preference
-            app:key="yelpSoon"
-            app:title="Coming Soon!"
-            app:summary="Support for Yelp searches is coming soon"
-            app:icon="@drawable/ic_info_outline_24dp"
-            app:enabled="false"/>
-<!--        <EditTextPreference-->
-<!--            app:key="yelpKey"-->
-<!--            app:title="Your Yelp API Key"-->
-<!--            app:summary="To use Yelp, provide an API key"-->
-<!--            app:icon="@drawable/ic_key_24dp"/>-->
-<!--        <Preference-->
-<!--            app:key="yelpHelp"-->
-<!--            app:title="Get your Yelp key"-->
-<!--            app:summary="Tap here for instructions on getting an API key"-->
-<!--            app:icon="@drawable/ic_info_outline_24dp"/>-->
+            app:key="yelpHelp"
+            app:title="Get your Yelp key"
+            app:summary="Tap here for instructions on getting a Yelp API key (see the &quot;How can I get started using the Yelp Fusion API?&quot; section)"
+            app:icon="@drawable/ic_info_outline_24dp"/>
     </PreferenceCategory>
 
     <PreferenceCategory

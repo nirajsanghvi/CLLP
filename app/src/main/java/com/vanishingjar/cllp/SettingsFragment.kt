@@ -48,15 +48,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         findPreference<EditTextPreference>("googleMapsKey")?.summaryProvider = googleMapsSummaryProvider
 
-//        val yelpSummaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
-//            if (preference.text.isNullOrEmpty()) {
-//                "To use Yelp, please provide your API key"
-//            } else {
-//                "Yelp API key is active"
-//            }
-//        }
-//
-//        findPreference<EditTextPreference>("yelpKey")?.summaryProvider = yelpSummaryProvider
+        val yelpSummaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
+            if (preference.text.isNullOrEmpty()) {
+                "To use Yelp, please provide your API key"
+            } else {
+                "Yelp API key is active"
+            }
+        }
+
+        findPreference<EditTextPreference>("yelpKey")?.summaryProvider = yelpSummaryProvider
 
         val calAgendaSummaryProvider = Preference.SummaryProvider<CalendarMultiListPreference> { preference ->
             if (preference.values.isEmpty()) {
@@ -127,14 +127,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-//        findPreference<Preference>("yelpHelp")?.setOnPreferenceClickListener { preference ->
-//            val url = "https://www.yelp.com/developers/faq"
-//            val intent = Intent(Intent.ACTION_VIEW)
-//            intent.data = Uri.parse(url)
-//            startActivity(intent)
-//
-//            true
-//        }
+        findPreference<Preference>("yelpHelp")?.setOnPreferenceClickListener { preference ->
+            val url = "https://www.yelp.com/developers/faq"
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.data = Uri.parse(url)
+            startActivity(intent)
+
+            true
+        }
 
         checkCalendarAccess()
 
