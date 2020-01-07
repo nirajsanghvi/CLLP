@@ -23,6 +23,8 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.joestelmach.natty.Parser
 import com.vanishingjar.cllp.api.googlemaps.GoogleMapsService
 import com.vanishingjar.cllp.api.googlemaps.model.MapsResponse
+import com.vanishingjar.cllp.api.yelp.YelpService
+import com.vanishingjar.cllp.api.yelp.model.SearchResponse
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Call
@@ -63,7 +65,7 @@ class NotifListener : NotificationListenerService() {
                 val mapsBikeRegex = Regex("(.*)\\s+biketo\\s+(.*)", RegexOption.IGNORE_CASE)
                 val mapsTransitRegex = Regex("(.*)\\s+transitto\\s+(.*)", RegexOption.IGNORE_CASE)
                 val mapsDriveRegex = Regex("(.*)\\s+driveto\\s+(.*)", RegexOption.IGNORE_CASE)
-                //val yelpRegex = Regex("(.*)\\s+yelpme\\s+(.*)", RegexOption.IGNORE_CASE)
+                val yelpRegex = Regex("(.*)\\s+yelpme\\s+(.*)", RegexOption.IGNORE_CASE)
                 val calAddRegex = Regex("addtocal\\s+(.*)\\s+on\\s+(.*)\\s+at\\s+(.*)", RegexOption.IGNORE_CASE)
                 val calAgendaRegex = Regex("calagenda", RegexOption.IGNORE_CASE)
                 val helpRegex = Regex("helpme", RegexOption.IGNORE_CASE)
@@ -114,16 +116,16 @@ class NotifListener : NotificationListenerService() {
                             cancelNotification(sbn.key)
                         }
                     }
-//                    yelpRegex.matches(textMsg) -> {
-//                        prefs.edit().putString("lastCommand", textMsg.toString()).commit()
-//                        val yelpMatches = yelpRegex.matchEntire(textMsg)
-//                        if (yelpMatches?.groups?.size == 3) {
-//                            val orig = yelpMatches.groups[1]?.value.toString()
-//                            val searchTerm = yelpMatches.groups[2]?.value.toString()
-//                            val star = "★"
-//                            cancelNotification(sbn.key)
-//                        }
-//                    }
+                    yelpRegex.matches(textMsg) -> {
+                        logCommandUsage("yelpSearch", textMsg.toString(), prefs)
+                        val yelpMatches = yelpRegex.matchEntire(textMsg)
+                        if (yelpMatches?.groups?.size == 3) {
+                            val orig = yelpMatches.groups[1]?.value.toString()
+                            val searchTerm = yelpMatches.groups[2]?.value.toString()
+                            getYelpSearchResults(orig, searchTerm, prefs.getString("yelpKey", null))
+                            cancelNotification(sbn.key)
+                        }
+                    }
                     calAddRegex.matches(textMsg) -> {
                         logCommandUsage("calAgenda", textMsg.toString(), prefs)
                         val calAddMatches = calAddRegex.matchEntire(textMsg)
@@ -333,6 +335,69 @@ class NotifListener : NotificationListenerService() {
 
         } ?: run {
             sendTextMessage("CLLP Error: Unable to fulfill request, the Google Maps API key is not setup in the CLLP app.")
+        }
+    }
+
+    private fun getYelpSearchResults(origin: String, searchTerm: String, apiKey: String?) {
+        apiKey?.let {key ->
+            val authInterceptor = Interceptor { chain ->
+                //val url = chain.request().url
+
+                val newRequest = chain.request()
+                    .newBuilder()
+                    //.url(url)
+                    .addHeader("Authorization", "Bearer $key")
+                    .build()
+
+                chain.proceed(newRequest)
+            }
+
+            //OkhttpClient for building http request url
+            val yelpClient = OkHttpClient().newBuilder()
+                .addInterceptor(authInterceptor)
+                .build()
+
+            val retrofit = Retrofit.Builder()
+                .client(yelpClient)
+                .baseUrl("https://api.yelp.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+
+            val service: YelpService = retrofit.create<YelpService>(YelpService::class.java)
+
+            val call = service.getSearchResults(origin, searchTerm)
+
+            call.enqueue(object: Callback<SearchResponse> {
+                override fun onResponse(call: Call<SearchResponse>, response: Response<SearchResponse>) {
+                    response.body()?.let {
+
+                        if (it.businesses.isNotEmpty()) {
+                            var resultMessage = "CLLP Yelp Results: \n\n"
+                            val star = "★"
+
+                            it.businesses.take(5).forEach {bus ->
+                                val stars = if (bus.rating != null) star.repeat(bus.rating.toInt()) else "N/A"
+                                val mileDistance = if (bus.distance != null) String.format("%.1f", bus.distance * 0.000621371192) + "mi" else "N/A"
+                                resultMessage += bus.name +
+                                        " (${bus.price}, $stars, ${bus.reviewCount} reviews)\n" +
+                                        "${bus.location.fullAddress}\n" +
+                                        "($mileDistance)\n" +
+                                        "${bus.phone}\n\n"
+                            }
+
+                            sendTextMessage(resultMessage)
+                        }
+                    }
+                }
+
+                override fun onFailure(call: Call<SearchResponse>, t: Throwable) {
+                    sendTextMessage("CLLP Error: Yelp API call failed. Double-check your API key and try again.")
+                }
+
+            })
+
+        } ?: run {
+            sendTextMessage("CLLP Error: Unable to fulfill request, the Yelp API key is not setup in the CLLP app.")
         }
     }
 
