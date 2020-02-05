@@ -23,6 +23,9 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.joestelmach.natty.Parser
 import com.vanishingjar.cllp.api.googlemaps.GoogleMapsService
 import com.vanishingjar.cllp.api.googlemaps.model.MapsResponse
+import com.vanishingjar.cllp.api.wikipedia.WikiService
+import com.vanishingjar.cllp.api.wikipedia.model.WikiSearchResponse
+import com.vanishingjar.cllp.api.wikipedia.model.WikiSummaryResponse
 import com.vanishingjar.cllp.api.yelp.YelpService
 import com.vanishingjar.cllp.api.yelp.model.SearchResponse
 import okhttp3.Interceptor
@@ -34,6 +37,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.min
 
 
 class NotifListener : NotificationListenerService() {
@@ -68,6 +72,7 @@ class NotifListener : NotificationListenerService() {
                 val yelpRegex = Regex("(.*)\\s+yelpme\\s+(.*)", RegexOption.IGNORE_CASE)
                 val calAddRegex = Regex("addtocal\\s+(.*)\\s+on\\s+(.*)\\s+at\\s+(.*)", RegexOption.IGNORE_CASE)
                 val calAgendaRegex = Regex("calagenda", RegexOption.IGNORE_CASE)
+                val wikiRegex = Regex("wiki\\s+(.*)", RegexOption.IGNORE_CASE)
                 val helpRegex = Regex("helpme", RegexOption.IGNORE_CASE)
 
                 when {
@@ -253,6 +258,15 @@ class NotifListener : NotificationListenerService() {
 
                         cancelNotification(sbn.key)
                     }
+                    wikiRegex.matches(textMsg) -> {
+                        logCommandUsage("wiki", textMsg.toString(), prefs)
+                        val wikiMatches = wikiRegex.matchEntire(textMsg)
+                        if (wikiMatches?.groups?.size == 2) {
+                            val searchTerm = wikiMatches.groups[1]?.value.toString()
+                            getWikiResults(searchTerm)
+                            cancelNotification(sbn.key)
+                        }
+                    }
                     helpRegex.matches(textMsg) -> {
                         logCommandUsage("helpme", textMsg.toString(), prefs)
 
@@ -391,6 +405,67 @@ class NotifListener : NotificationListenerService() {
         } ?: run {
             sendTextMessage("CLLP Error: Unable to fulfill request, the Yelp API key is not setup in the CLLP app.")
         }
+    }
+
+    private fun getWikiResults(searchTerm: String) {
+        val retrofit = Retrofit.Builder()
+            .client(OkHttpClient())
+            .baseUrl("https://en.wikipedia.org/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val service: WikiService = retrofit.create<WikiService>(WikiService::class.java)
+
+        val call = service.getSearchResults(searchTerm)
+
+        call.enqueue(object: Callback<WikiSearchResponse> {
+            override fun onResponse(call: Call<WikiSearchResponse>, response: Response<WikiSearchResponse>) {
+                response.body()?.let {
+                    if (it.query.search.isNotEmpty()) {
+                        var additionalResults = ""
+                        if (it.query.search.size > 1) {
+                            additionalResults = " Other possible search results: " + it.query.search.subList(1, min(5, it.query.search.size - 1)).joinToString {searchResults -> "\"${searchResults.title}\""}
+                        }
+
+                        if (!it.query.searchinfo.suggestion.isNullOrEmpty()) {
+                            additionalResults += " Did you mean \"${it.query.searchinfo.suggestion}\"?"
+                        }
+
+                        sendTextMessage("CLLP Results: Getting wiki summary for closest result \"${it.query.search[0].title}\".$additionalResults")
+                        getWikiSummary(it.query.search[0].title, service)
+                    } else if (!it.query.searchinfo.suggestion.isNullOrEmpty()) {
+                        sendTextMessage("CLLP Warning: No exact match, so getting results for \"${it.query.searchinfo.suggestion}\" instead")
+                        getWikiResults(it.query.searchinfo.suggestion)
+                    } else {
+                        sendTextMessage("CLLP Error: Couldn't find any articles or suggestions for that search term.")
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<WikiSearchResponse>, t: Throwable) {
+                sendTextMessage("CLLP Error: Unable to search Wikipedia. Check your query and try again later.")
+            }
+        })
+    }
+
+    private fun getWikiSummary(title: String, service: WikiService) {
+        val call = service.getSummary(title)
+
+        call.enqueue(object: Callback<WikiSummaryResponse> {
+            override fun onResponse(call: Call<WikiSummaryResponse>, response: Response<WikiSummaryResponse>) {
+                response.body()?.let {
+                    if (it.type != "standard") {
+                        sendTextMessage("Unexpected result, no summary found for $title.")
+                    } else {
+                        sendTextMessage(it.extract ?: "No summary found for $title.")
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<WikiSummaryResponse>, t: Throwable) {
+                sendTextMessage("CLLP Error: Could not get the Wikipedia summary for $title")
+            }
+        })
     }
 
     private fun sendTextMessage(message: String, truncate: Boolean = false) {
