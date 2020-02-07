@@ -459,7 +459,7 @@ class NotifListener : NotificationListenerService() {
                 response.body()?.let {
                     val feelsLikeTemp = if (it.currently?.temperature != null && it.currently.apparentTemperature != null &&
                         (abs(it.currently.temperature - it.currently.apparentTemperature) > 5.0)) "(feels like ${it.currently.apparentTemperature.toInt()})" else ""
-                    var resultMessage = "CLLP Results: Currently ${it.currently?.summary ?: "<unknown>"} and ${it.currently?.temperature?.toInt() ?: "N/A"} degrees $feelsLikeTemp\n" +
+                    var resultMessage = "CLLP Results (powered by Dark Sky): Currently ${it.currently?.summary ?: "<unknown>"} and ${it.currently?.temperature?.toInt() ?: "N/A"} degrees $feelsLikeTemp\n" +
                             "Next hour: ${it.minutely?.summary ?: "N/A"}\n24 hrs: ${it.hourly?.summary ?: "N/A"}\nThis week: ${it.daily?.summary ?: "N/A"}\n\n"
 
                     val timezone = TimeZone.getTimeZone(it.timezone)
