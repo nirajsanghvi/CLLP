@@ -55,7 +55,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 "Yelp API key is active"
             }
         }
-
         findPreference<EditTextPreference>("yelpKey")?.summaryProvider = yelpSummaryProvider
 
         val calAgendaSummaryProvider = Preference.SummaryProvider<CalendarMultiListPreference> { preference ->
