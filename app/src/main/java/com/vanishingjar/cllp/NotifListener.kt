@@ -303,7 +303,8 @@ class NotifListener : NotificationListenerService() {
                                 "Get cal events: calagenda\n\n" +
                                 "Add cal event: addtocal <title> on <datetime> at <location>\n\n" +
                                 "Search wiki: wiki <search term>\n\n" +
-                                "Get weather: weather <city (add state/country if needed)>"
+                                "Get weather: weather <city (add state/country if needed)>\n\n" +
+                                "Calculator: calc <expression>"
                         sendTextMessage(helpText)
 
                         cancelNotification(sbn.key)
