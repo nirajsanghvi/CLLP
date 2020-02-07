@@ -515,7 +515,7 @@ class NotifListener : NotificationListenerService() {
 
             sendTextMessage("CLLP Result: $answer")
         } catch (exception: InvalidSyntaxException) {
-            sendTextMessage("CLLP Error: ${exception.message ?: ""}")
+            sendTextMessage("CLLP Error: Something went wrong - ${exception.message ?: ""}")
         }
     }
 
