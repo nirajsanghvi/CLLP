@@ -24,6 +24,8 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.joestelmach.natty.Parser
 import com.vanishingjar.cllp.api.googlemaps.GoogleMapsService
 import com.vanishingjar.cllp.api.googlemaps.model.MapsResponse
+import com.vanishingjar.cllp.api.postfix.exception.InvalidSyntaxException
+import com.vanishingjar.cllp.api.postfix.syntax.Postfix
 import com.vanishingjar.cllp.api.weather.WeatherService
 import com.vanishingjar.cllp.api.weather.model.WeatherResponse
 import com.vanishingjar.cllp.api.wikipedia.WikiService
@@ -38,6 +40,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.abs
@@ -78,6 +81,7 @@ class NotifListener : NotificationListenerService() {
                 val calAgendaRegex = Regex("calagenda", RegexOption.IGNORE_CASE)
                 val wikiRegex = Regex("wiki\\s+(.*)", RegexOption.IGNORE_CASE)
                 val weatherRegex = Regex("weather\\s+(.*)", RegexOption.IGNORE_CASE)
+                val calcRegex = Regex("calc\\s+(.*)", RegexOption.IGNORE_CASE)
                 val helpRegex = Regex("helpme", RegexOption.IGNORE_CASE)
 
                 when {
@@ -278,6 +282,15 @@ class NotifListener : NotificationListenerService() {
                         if (weatherMatches?.groups?.size == 2) {
                             val location = weatherMatches.groups[1]?.value.toString()
                             getWeatherResults(location)
+                            cancelNotification(sbn.key)
+                        }
+                    }
+                    calcRegex.matches(textMsg) -> {
+                        logCommandUsage("calc", textMsg.toString(), prefs)
+                        val calcMatches = calcRegex.matchEntire(textMsg)
+                        if (calcMatches?.groups?.size == 2) {
+                            val expression = calcMatches.groups[1]?.value.toString()
+                            getCalculatorResults(expression)
                             cancelNotification(sbn.key)
                         }
                     }
@@ -490,6 +503,20 @@ class NotifListener : NotificationListenerService() {
                 sendTextMessage("CLLP Error: Dark Sky API call failed.")
             }
         })
+    }
+
+    private fun getCalculatorResults(expression: String) {
+        try {
+            val infix = Postfix.scan(expression)
+            val postfix = Postfix.toPostfix(infix)
+            val result = Postfix.evaluate(postfix)
+
+            val answer = if (result.value.scale() > 4) result.value.setScale(4, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString() else result.value.stripTrailingZeros().toPlainString()
+
+            sendTextMessage("CLLP Result: $answer")
+        } catch (exception: InvalidSyntaxException) {
+            sendTextMessage("CLLP Error: ${exception.message ?: ""}")
+        }
     }
 
     private fun getWikiResults(searchTerm: String) {
