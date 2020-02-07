@@ -455,22 +455,29 @@ class NotifListener : NotificationListenerService() {
         call.enqueue(object: Callback<WeatherResponse> {
             override fun onResponse(call: Call<WeatherResponse>, response: Response<WeatherResponse>) {
                 response.body()?.let {
-                    val feelsLikeTemp = if (it.currently.temperature != null && it.currently.apparentTemperature != null &&
+                    val feelsLikeTemp = if (it.currently?.temperature != null && it.currently.apparentTemperature != null &&
                         (abs(it.currently.temperature - it.currently.apparentTemperature) > 5.0)) "(feels like ${it.currently.apparentTemperature.toInt()})" else ""
-                    var resultMessage = "CLLP Results: Currently ${it.currently.summary} and ${it.currently.temperature?.toInt()} degrees $feelsLikeTemp\n" +
-                            "Next hour: ${it.minutely.summary}\nToday: ${it.hourly.summary}\nThis week: ${it.daily.summary}\n\n"
+                    var resultMessage = "CLLP Results: Currently ${it.currently?.summary ?: "<unknown>"} and ${it.currently?.temperature?.toInt() ?: "N/A"} degrees $feelsLikeTemp\n" +
+                            "Next hour: ${it.minutely?.summary ?: "N/A"}\n24 hrs: ${it.hourly?.summary ?: "N/A"}\nThis week: ${it.daily?.summary ?: "N/A"}\n\n"
 
                     val timezone = TimeZone.getTimeZone(it.timezone)
                     val cal = Calendar.getInstance(timezone)
 
-                    for (day in it.daily.data.take(3)) {
-                        cal.clear()
-                        cal.timeInMillis = day.time * 1000
-                        val dayLabel = cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.getDefault())
+                    it.daily?.data?.let {days ->
+                        for (day in days.take(3)) {
+                            cal.clear()
+                            cal.timeInMillis = day.time * 1000
+                            val dayLabel = cal.getDisplayName(
+                                Calendar.DAY_OF_WEEK,
+                                Calendar.SHORT,
+                                Locale.getDefault()
+                            )
 
-                        val wind = if (day.windSpeed != null && day.windSpeed > 35.0) "wind speed: ${day.windSpeed}" else ""
+                            val wind =
+                                if (day.windSpeed != null && day.windSpeed > 35.0) "wind speed: ${day.windSpeed}" else ""
 
-                        resultMessage += "$dayLabel: ${day.weatherIcon} ${day.temperatureHigh?.toInt()} | ${day.temperatureLow?.toInt()} $wind\n"
+                            resultMessage += "$dayLabel: ${day.weatherIcon} ${day.temperatureHigh?.toInt()} | ${day.temperatureLow?.toInt()} $wind\n"
+                        }
                     }
 
                     sendTextMessage(resultMessage)
