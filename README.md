@@ -19,9 +19,15 @@ Unfortunately CLLP is not available on Google Play due to their [heavy-handed cr
 * Google Calendar
   * Agenda for next 3 days - `calagenda`
   * Add event to calendar - `addtocal [event title] on [date and time] at [location]`
+* Weather
+  * Current conditions, summaries, and 3-day forecast - `weather [city and state/country as needed]`
 * Yelp Business Search
   * Business Name - `[current location] yelpme [name of business]`
   * Type/Category of food (aka Chinese, Mexican, etc) - `[current location] yelpme [type of food]`
+* Wikipedia
+  * Get a snippet and similar article titles - `wiki [search term]`
+* Calculator
+  * Arithmetic, trig functions, ceil/floor - `calc [expression]` (powered by https://github.com/kieferlam/postfix#operators, check there for function details)
 * List all available commands - `helpme`
 
 ![App help demo](https://i.imgur.com/Cq86Bid.gif)
