@@ -32,11 +32,6 @@ Unfortunately CLLP is not available on Google Play due to their [heavy-handed cr
 
 ![App help demo](https://i.imgur.com/Cq86Bid.gif)
 
-# Wishlist
-* Weather
-* Wikipedia
-* Use the Android device location to help give a hint when using commands looking for places so you don't have to type as much on the Light Phone
-
 # Permissions and API Keys
 The CLLP app tries to explain what permissions are needed for different things. For instance, it absolutely needs notification access (to catch incoming SMS commands) and SMS sending permission (to send back results). Currently you can optionally give calendar access permission for the agenda and event adding features, and a Google Maps API key you generate to get directions (this is because [they changed the pricing model](https://www.reddit.com/r/GoogleMaps/comments/8gl0zl/google_maps_api_pricing_change/) last year so it's prohibitively expensive for me to use my own API key for all users). The intention is to have all permissions be optional so you can only grant the ones you need for the features you want.
 
