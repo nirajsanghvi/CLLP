@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.location.Geocoder
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
@@ -23,6 +24,8 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.joestelmach.natty.Parser
 import com.vanishingjar.cllp.api.googlemaps.GoogleMapsService
 import com.vanishingjar.cllp.api.googlemaps.model.MapsResponse
+import com.vanishingjar.cllp.api.weather.WeatherService
+import com.vanishingjar.cllp.api.weather.model.WeatherResponse
 import com.vanishingjar.cllp.api.wikipedia.WikiService
 import com.vanishingjar.cllp.api.wikipedia.model.WikiSearchResponse
 import com.vanishingjar.cllp.api.wikipedia.model.WikiSummaryResponse
@@ -37,6 +40,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.abs
 import kotlin.math.min
 
 
@@ -73,6 +77,7 @@ class NotifListener : NotificationListenerService() {
                 val calAddRegex = Regex("addtocal\\s+(.*)\\s+on\\s+(.*)\\s+at\\s+(.*)", RegexOption.IGNORE_CASE)
                 val calAgendaRegex = Regex("calagenda", RegexOption.IGNORE_CASE)
                 val wikiRegex = Regex("wiki\\s+(.*)", RegexOption.IGNORE_CASE)
+                val weatherRegex = Regex("weather\\s+(.*)", RegexOption.IGNORE_CASE)
                 val helpRegex = Regex("helpme", RegexOption.IGNORE_CASE)
 
                 when {
@@ -267,6 +272,15 @@ class NotifListener : NotificationListenerService() {
                             cancelNotification(sbn.key)
                         }
                     }
+                    weatherRegex.matches(textMsg) -> {
+                        logCommandUsage("weather", textMsg.toString(), prefs)
+                        val weatherMatches = weatherRegex.matchEntire(textMsg)
+                        if (weatherMatches?.groups?.size == 2) {
+                            val location = weatherMatches.groups[1]?.value.toString()
+                            getWeatherResults(location)
+                            cancelNotification(sbn.key)
+                        }
+                    }
                     helpRegex.matches(textMsg) -> {
                         logCommandUsage("helpme", textMsg.toString(), prefs)
 
@@ -406,6 +420,67 @@ class NotifListener : NotificationListenerService() {
         } ?: run {
             sendTextMessage("CLLP Error: Unable to fulfill request, the Yelp API key is not setup in the CLLP app.")
         }
+    }
+
+    private fun getWeatherResults(location: String) {
+        val geocoder = Geocoder(this)
+        val addresses = geocoder.getFromLocationName(location.trim(), 5)
+
+        var lat = ""
+        var lon = ""
+
+        for (address in addresses) {
+            if (address.hasLatitude() && address.hasLongitude()) {
+                lat = address.latitude.toString()
+                lon = address.longitude.toString()
+                break
+            }
+        }
+
+        if (lat.isEmpty() || lon.isEmpty()) {
+            return
+        }
+
+        val retrofit = Retrofit.Builder()
+            .client(OkHttpClient())
+            .baseUrl("https://api.darksky.net/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val service: WeatherService = retrofit.create<WeatherService>(WeatherService::class.java)
+
+        // Note: If you forked the CLLP repo, you need to provide your own Dark Sky API key below
+        val call = service.getWeatherResults(getString(R.string.dark_sky_api_key), lat, lon)
+
+        call.enqueue(object: Callback<WeatherResponse> {
+            override fun onResponse(call: Call<WeatherResponse>, response: Response<WeatherResponse>) {
+                response.body()?.let {
+                    val feelsLikeTemp = if (it.currently.temperature != null && it.currently.apparentTemperature != null &&
+                        (abs(it.currently.temperature - it.currently.apparentTemperature) > 5.0)) "(feels like ${it.currently.apparentTemperature.toInt()})" else ""
+                    var resultMessage = "CLLP Results: Currently ${it.currently.summary} and ${it.currently.temperature?.toInt()} degrees $feelsLikeTemp\n" +
+                            "Next hour: ${it.minutely.summary}\nToday: ${it.hourly.summary}\nThis week: ${it.daily.summary}\n\n"
+
+                    val timezone = TimeZone.getTimeZone(it.timezone)
+                    val cal = Calendar.getInstance(timezone)
+
+                    for (day in it.daily.data.take(3)) {
+                        cal.clear()
+                        cal.timeInMillis = day.time * 1000
+                        val dayLabel = cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.getDefault())
+
+                        val wind = if (day.windSpeed != null && day.windSpeed > 35.0) "wind speed: ${day.windSpeed}" else ""
+
+                        resultMessage += "$dayLabel: ${day.weatherIcon} ${day.temperatureHigh?.toInt()} | ${day.temperatureLow?.toInt()} $wind\n"
+                    }
+
+                    sendTextMessage(resultMessage)
+                }
+            }
+
+            override fun onFailure(call: Call<WeatherResponse>, t: Throwable) {
+                sendTextMessage("CLLP Error: Dark Sky API call failed.")
+            }
+        })
     }
 
     private fun getWikiResults(searchTerm: String) {
