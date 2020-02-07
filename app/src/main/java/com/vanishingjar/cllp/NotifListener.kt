@@ -288,8 +288,9 @@ class NotifListener : NotificationListenerService() {
                                 "Map: <origin> walkto|transitto|driveto|biketo <destination>\n\n" +
                                 "Yelp: <current location> yelpme <search category or business name>\n\n" +
                                 "Get cal events: calagenda\n\n" +
-                                "Add cal event: addtocal <title> on <datetime> at <location>" +
-                                "Search wiki: wiki <search term>"
+                                "Add cal event: addtocal <title> on <datetime> at <location>\n\n" +
+                                "Search wiki: wiki <search term>\n\n" +
+                                "Get weather: weather <city (add state/country if needed)>"
                         sendTextMessage(helpText)
 
                         cancelNotification(sbn.key)
@@ -438,6 +439,7 @@ class NotifListener : NotificationListenerService() {
         }
 
         if (lat.isEmpty() || lon.isEmpty()) {
+            sendTextMessage("CLLP Error: Couldn't find a latitude/longitude for that location.")
             return
         }
 
