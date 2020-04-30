@@ -8,7 +8,7 @@ android {
     compileSdkVersion 29
     defaultConfig {
         applicationId "com.vanishingjar.cllp"
-        minSdkVersion 24
+        minSdkVersion 23
         targetSdkVersion 29
         versionCode 4
         versionName "2.0.0"
