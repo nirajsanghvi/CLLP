@@ -3,14 +3,12 @@ package com.vanishingjar.cllp
 import android.Manifest
 import android.app.Notification
 import android.content.ContentValues
-import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.location.Geocoder
 import android.net.Uri
 import android.os.Bundle
-import android.os.IBinder
 import android.provider.CalendarContract
 import android.provider.Telephony
 import android.service.notification.NotificationListenerService
@@ -48,9 +46,6 @@ import kotlin.math.min
 
 
 class NotifListener : NotificationListenerService() {
-    override fun onBind(intent: Intent?): IBinder? {
-        return super.onBind(intent)
-    }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         super.onNotificationPosted(sbn)
@@ -61,7 +56,9 @@ class NotifListener : NotificationListenerService() {
             return
         }
 
-        if (sbn !== null && sbn.packageName == Telephony.Sms.getDefaultSmsPackage(this)) {
+        //Only check for CLLP commands from the default SMS app, Google Messages, Google Voice, TextNow, or Google Hangouts
+        if (sbn !== null && (sbn.packageName == Telephony.Sms.getDefaultSmsPackage(this) ||
+                    sbn.packageName in listOf("com.google.android.apps.messaging", "com.google.android.apps.googlevoice", "com.enflick.android.TextNow", "com.google.android.talk"))) {
 
             val textMsg = sbn.notification.extras.getCharSequence(Notification.EXTRA_TEXT)
 
