@@ -27,7 +27,7 @@ abstract class FunctionOperator internal constructor(symbol: String, numOfParams
                 INVERSESINE, INVERSECOSINE, INVERSETAN, ABSOLUTE
         )
 
-        fun isOperator(str: String): Boolean = OPERATORS.any{ it -> it.isStringEquivalent(str)}
+        fun isOperator(str: String): Boolean = OPERATORS.any{ it.isStringEquivalent(str)}
         
         fun parse(string: String): FunctionOperator {
             try {
