@@ -8,6 +8,8 @@ Command Line for Light Phone (CLLP) is a tool for Android users that use two act
 # Installing CLLP
 Unfortunately CLLP is not available on Google Play due to their [heavy-handed crackdown on apps that use SMS](https://www.xda-developers.com/google-restriction-sms-call-log-permissions/) so it must be side-loaded on an Android device running Android Marshmallow or higher. You can download the latest apk to install it from [the releases page](https://github.com/nirajsanghvi/CLLP/releases). After initial install, the app will automatically notify you as new releases become available.
 
+***Note: I have noticed that my Light Phone will not receive responses if I have RCS enabled on my Android device. After disabling RCS (on the Pixel, you do this in the Messages app by turning off "Chat Features") it can take a few hours before messages start coming through.***
+
 ![App demo](https://i.imgur.com/3XegkKH.gif)
 
 # Current features supported by CLLP
